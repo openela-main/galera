@@ -1,0 +1,17 @@
+Upstream PR:
+https://github.com/codership/galera/pull/512
+
+diff -up galera-25.3.23/SConstruct.bak galera-25.3.23/SConstruct
+--- galera-25.3.26/SConstruct.bak	2018-07-13 15:14:49.059835554 +0200
++++ galera-25.3.26/SConstruct	2018-07-13 15:19:07.717967794 +0200
+@@ -194,8 +194,8 @@ if link != 'default':
+     env.Replace(LINK = link)
+ 
+ # Get compiler name/version, CXX may be set to "c++" which may be clang or gcc
+-cc_version = str(read_first_line(env['CC'].split() + ['--version']))
+-cxx_version = str(read_first_line(env['CXX'].split() + ['--version']))
++cc_version = str(read_first_line(env['CC'].split() + ['--version']).decode())
++cxx_version = str(read_first_line(env['CXX'].split() + ['--version']).decode())
+ 
+ print('Using C compiler executable: ' + env['CC'])
+ print('C compiler version is: ' + cc_version)

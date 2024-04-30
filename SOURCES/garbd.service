@@ -1,0 +1,10 @@
+[Unit]
+Description=Galera Arbitrator Daemon
+Documentation=http://www.codership.com/wiki/doku.php?id=galera_arbitrator
+
+[Service]
+ExecStart=/usr/sbin/garbd-wrapper
+ExecReload=/bin/kill -HUP $MAINPID
+
+[Install]
+WantedBy=multi-user.target

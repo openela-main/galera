@@ -1,0 +1,38 @@
+#!/usr/bin/sh
+# This script is simple wrapper around garbd, that parses startup configuration.
+# Its main purpose is to bridge the differences between initscript and systemd unit file.
+
+CONFIG_FILE=/etc/sysconfig/garb
+
+source $CONFIG_FILE
+
+# Check that node addresses and group name are configured
+if [ -z "$GALERA_NODES" ]; then
+  echo "List of GALERA_NODES is not configured" >&2
+  exit 1
+fi
+if [ -z "$GALERA_GROUP" ]; then
+  echo "GALERA_GROUP name is not configured" >&2
+  exit 1
+fi
+
+GALERA_PORT=${GALERA_PORT:-4567}
+
+# Find a working node
+for ADDRESS in ${GALERA_NODES} 0; do
+  HOST=$(echo $ADDRESS | cut -d \: -f 1)
+  PORT=$(echo $ADDRESS | cut -s -d \: -f 2)
+  PORT=${PORT:-$GALERA_PORT}
+  ncat --send-only --recv-only $HOST $PORT >/dev/null && break
+done
+if [ ${ADDRESS} == "0" ]; then
+  echo "None of the nodes in GALERA_NODES is accessible" >&2
+  exit 1
+fi
+
+OPTIONS="-a gcomm://$ADDRESS"
+[ -n "$GALERA_GROUP" ]   && OPTIONS="$OPTIONS -g $GALERA_GROUP"
+[ -n "$GALERA_OPTIONS" ] && OPTIONS="$OPTIONS -o $GALERA_OPTIONS"
+[ -n "$LOG_FILE" ]       && OPTIONS="$OPTIONS -l $LOG_FILE"
+
+exec /usr/sbin/garbd $OPTIONS

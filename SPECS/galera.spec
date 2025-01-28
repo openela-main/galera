@@ -1,5 +1,8 @@
+# To both save infrastrucutre resources and workaround for i686 FTBFS
+ExcludeArch: %{ix86}
+
 Name:           galera
-Version:        26.4.14
+Version:        26.4.20
 Release:        1%{?dist}
 Summary:        Synchronous multi-master wsrep provider (replication engine)
 
@@ -16,6 +19,7 @@ Source1:        garbd.service
 Source2:        garbd-wrapper
 
 Patch0:         cmake_paths.patch
+Patch1:         docs.patch
 
 BuildRequires:  boost-devel check-devel openssl-devel cmake systemd gcc-c++ asio-devel
 Requires(pre):  /usr/sbin/useradd
@@ -34,7 +38,8 @@ description of Galera replication engine see https://www.galeracluster.com web.
 
 %prep
 %setup -q
-%patch0 -p1
+%patch -P0 -p1
+%patch -P1 -p1
 
 %build
 %{set_build_flags}
@@ -103,6 +108,8 @@ sed -i 's;/usr/bin/garbd;/usr/sbin/garbd;g' %{buildroot}/usr/share/doc/galera/ga
 ##   specific to this service, either statically via systemd-sysusers or dynamically
 ##   via the DynamicUser= service setting.
 sed -i 's/User=nobody/User=garb/g' %{buildroot}/usr/share/doc/galera/garbd.service
+# Maintainers from other distributions also tries to resolve it on the upstream:
+#   https://github.com/codership/galera/pull/633
 
 # Install old service and wrapper to maintain compatibility
 install -D -m 644 %{SOURCE1} %{buildroot}%{_unitdir}/garbd.service
@@ -148,14 +155,24 @@ install -D -m 755 %{SOURCE2} %{buildroot}%{_sbindir}/garbd-wrapper
 
 %{_libdir}/galera/libgalera_smm.so
 
-%doc %{_docdir}/galera/AUTHORS
 %doc %{_docdir}/galera/COPYING
 %doc %{_docdir}/galera/LICENSE.asio
-%doc %{_docdir}/galera/README
-#%doc %{_docdir}/galera/README-MySQL
+%doc %{_docdir}/galera/README-MySQL
 
 
 %changelog
+* Thu Nov 14 2024 Michal Schorm <mschorm@redhat.com> - 26.4.20-1
+- Rebase to 26.4.20
+
+* Fri Oct 18 2024 Michal Schorm <mschorm@redhat.com> - 26.4.19-1
+- Rebase to 26.4.19
+
+* Fri Jun 07 2024 Michal Schorm <mschorm@redhat.com> - 26.4.18-1
+- Rebase to 26.4.18
+
+* Fri Nov 17 2023 Michal Schorm <mschorm@redhat.com> - 26.4.16-1
+- Rebase to 26.4.16
+
 * Sat Apr 29 2023 Michal Schorm <mschorm@redhat.com> - 26.4.14-1
 - Rebase to 26.4.14
 

@@ -1,5 +1,8 @@
+# To both save infrastrucutre resources and workaround for i686 FTBFS
+ExcludeArch: %{ix86}
+
 Name:           galera
-Version:        26.4.14
+Version:        26.4.20
 Release:        1%{?dist}
 Summary:        Synchronous multi-master wsrep provider (replication engine)
 
@@ -12,10 +15,8 @@ URL:            http://galeracluster.com/
 
 Source0:        http://releases.galeracluster.com/source/%{name}-%{version}.tar.gz
 
-Source1:        garbd.service
-Source2:        garbd-wrapper
-
 Patch0:         cmake_paths.patch
+Patch1:         docs.patch
 
 BuildRequires:  boost-devel check-devel openssl-devel cmake systemd gcc-c++ asio-devel
 Requires(pre):  /usr/sbin/useradd
@@ -34,7 +35,8 @@ description of Galera replication engine see https://www.galeracluster.com web.
 
 %prep
 %setup -q
-%patch0 -p1
+%patch -P0 -p1
+%patch -P1 -p1
 
 %build
 %{set_build_flags}
@@ -70,13 +72,13 @@ cmake -B %_vpath_builddir -LAH
 #   Fedora downstream packaging historically used "garbd" name for the service.
 #
 #   Let's stick with the Fedora legacy naming, AND provide an alias to the Galera upstream name
-mv %{buildroot}/usr/lib/systemd/system/garb.service %{buildroot}/usr/lib/systemd/system/garbd.service
-sed -i 's/Alias=garbd.service/Alias=garb.service/g' %{buildroot}/usr/lib/systemd/system/garbd.service
+mv %{buildroot}%{_unitdir}/garb.service %{buildroot}%{_unitdir}/garbd.service
+sed -i 's/Alias=garbd.service/Alias=garb.service/g' %{buildroot}%{_unitdir}/garbd.service
 
 # PATCH 2:
 #   Fix the hardcoded paths
 #     In the Systemd service file:
-sed -i 's;/usr/bin/garb-systemd;/usr/sbin/garb-systemd;g' %{buildroot}/usr/lib/systemd/system/garbd.service
+sed -i 's;/usr/bin/garb-systemd;/usr/sbin/garb-systemd;g' %{buildroot}%{_unitdir}/garbd.service
 #     In the wrapper script:
 sed -i 's;/usr/bin/garbd;/usr/sbin/garbd;g' %{buildroot}/usr/sbin/garb-systemd
 
@@ -103,7 +105,9 @@ sed -i 's;/usr/bin/garbd;/usr/sbin/garbd;g' %{buildroot}/usr/sbin/garb-systemd
 ##   in particular on systems using NFS or running containers. Allocate a user ID
 ##   specific to this service, either statically via systemd-sysusers or dynamically
 ##   via the DynamicUser= service setting.
-sed -i 's/User=nobody/User=garb/g' %{buildroot}/usr/lib/systemd/system/garbd.service
+sed -i 's/User=nobody/User=garb/g' %{buildroot}%{_unitdir}/garbd.service
+# Maintainers from other distributions also tries to resolve it on the upstream:
+#   https://github.com/codership/galera/pull/633
 
 
 %check
@@ -132,7 +136,6 @@ sed -i 's/User=nobody/User=garb/g' %{buildroot}/usr/lib/systemd/system/garbd.ser
 %dir %{_libdir}/galera
 
 %{_sbindir}/garbd
-#%{_sbindir}/garbd-wrapper
 
 # PATCH 3:
 #   Make sure the wrapper script is executable
@@ -144,14 +147,24 @@ sed -i 's/User=nobody/User=garb/g' %{buildroot}/usr/lib/systemd/system/garbd.ser
 
 %{_libdir}/galera/libgalera_smm.so
 
-%doc %{_docdir}/galera/AUTHORS
 %doc %{_docdir}/galera/COPYING
 %doc %{_docdir}/galera/LICENSE.asio
-%doc %{_docdir}/galera/README
-#%doc %{_docdir}/galera/README-MySQL
+%doc %{_docdir}/galera/README-MySQL
 
 
 %changelog
+* Thu Nov 14 2024 Michal Schorm <mschorm@redhat.com> - 26.4.20-1
+- Rebase to 26.4.20
+
+* Fri Oct 18 2024 Michal Schorm <mschorm@redhat.com> - 26.4.19-1
+- Rebase to 26.4.19
+
+* Fri Jun 07 2024 Michal Schorm <mschorm@redhat.com> - 26.4.18-1
+- Rebase to 26.4.18
+
+* Fri Nov 17 2023 Michal Schorm <mschorm@redhat.com> - 26.4.16-1
+- Rebase to 26.4.16
+
 * Sat Apr 29 2023 Michal Schorm <mschorm@redhat.com> - 26.4.14-1
 - Rebase to 26.4.14
 

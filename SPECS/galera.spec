@@ -1,8 +1,8 @@
-# To both save infrastrucutre resources and workaround for i686 FTBFS
+# To both save infrastructure resources and workaround for i686 FTBFS
 ExcludeArch: %{ix86}
 
 Name:           galera
-Version:        26.4.20
+Version:        26.4.23
 Release:        1%{?dist}
 Summary:        Synchronous multi-master wsrep provider (replication engine)
 
@@ -42,9 +42,8 @@ description of Galera replication engine see https://www.galeracluster.com web.
 %patch -P1 -p1
 
 %build
-%{set_build_flags}
 
-%cmake . \
+%cmake \
        -DCMAKE_BUILD_TYPE="%{?with_debug:Debug}%{!?with_debug:RelWithDebInfo}" \
        -DINSTALL_LAYOUT=RPM \
        -DCMAKE_RULE_MESSAGES:BOOL=OFF \
@@ -59,7 +58,7 @@ description of Galera replication engine see https://www.galeracluster.com web.
        -DINSTALL_LIBDIR="%{_lib}/galera" \
        -DINSTALL_MANPAGE="share/man/man8"
 
-cmake -B %_vpath_builddir -LAH
+cmake -B %_vpath_builddir -N -LAH
 
 %cmake_build
 
@@ -161,8 +160,14 @@ install -D -m 755 %{SOURCE2} %{buildroot}%{_sbindir}/garbd-wrapper
 
 
 %changelog
-* Thu Nov 14 2024 Michal Schorm <mschorm@redhat.com> - 26.4.20-1
-- Rebase to 26.4.20
+* Fri Aug 08 2025 Michal Schorm <mschorm@redhat.com> - 26.4.23-1
+- Rebase to 26.4.23
+
+* Wed Jul 30 2025 Michal Schorm <mschorm@redhat.com> - 26.4.22-1
+- Rebase to 26.4.22
+
+* Wed Feb 05 2025 Michal Schorm <mschorm@redhat.com> - 26.4.21-1
+- Rebase to 26.4.21
 
 * Fri Oct 18 2024 Michal Schorm <mschorm@redhat.com> - 26.4.19-1
 - Rebase to 26.4.19

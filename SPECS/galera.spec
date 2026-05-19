@@ -2,7 +2,7 @@
 ExcludeArch: %{ix86}
 
 Name:           galera
-Version:        26.4.23
+Version:        26.4.25
 Release:        1%{?dist}
 Summary:        Synchronous multi-master wsrep provider (replication engine)
 
@@ -159,6 +159,12 @@ unlink /etc/systemd/system/garb.service || :
 
 
 %changelog
+* Sun Feb 08 2026 Michal Schorm <mschorm@redhat.com> - 26.4.25-1
+- Rebased to 26.4.25
+
+* Tue Jan 06 2026 Michal Schorm <mschorm@redhat.com> - 26.4.24-1
+- Rebase to 26.4.24
+
 * Fri Aug 08 2025 Michal Schorm <mschorm@redhat.com> - 26.4.23-1
 - Rebase to 26.4.23
 

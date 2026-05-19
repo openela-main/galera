@@ -1,8 +1,8 @@
-# To both save infrastrucutre resources and workaround for i686 FTBFS
+# To both save infrastructure resources and workaround for i686 FTBFS
 ExcludeArch: %{ix86}
 
 Name:           galera
-Version:        26.4.21
+Version:        26.4.25
 Release:        1%{?dist}
 Summary:        Synchronous multi-master wsrep provider (replication engine)
 
@@ -20,7 +20,6 @@ Patch1:         docs.patch
 Patch2:         network.patch
 
 BuildRequires:  boost-devel check-devel openssl-devel cmake systemd gcc-c++ asio-devel
-Requires(pre):  /usr/sbin/useradd
 Requires:       nmap-ncat
 Requires:       procps-ng
 
@@ -40,9 +39,12 @@ description of Galera replication engine see https://www.galeracluster.com web.
 %patch -P1 -p1
 %patch -P2 -p1
 
-%build
-%{set_build_flags}
+# Create a sysusers.d config file
+cat >galera.sysusers.conf <<EOF
+u garb - 'Galera Arbitrator Daemon' /dev/null -
+EOF
 
+%build
 
 %cmake \
        -DCMAKE_BUILD_TYPE="%{?with_debug:Debug}%{!?with_debug:RelWithDebInfo}" \
@@ -59,7 +61,7 @@ description of Galera replication engine see https://www.galeracluster.com web.
        -DINSTALL_LIBDIR="%{_lib}/galera" \
        -DINSTALL_MANPAGE="share/man/man8"
 
-cmake -B %_vpath_builddir -LAH
+cmake -B %_vpath_builddir -N -LAH
 
 %cmake_build
 
@@ -99,13 +101,14 @@ sed -i 's;/usr/bin/garbd;/usr/sbin/garbd;g' %{buildroot}/usr/sbin/garb-systemd
 ##   via the DynamicUser= service setting.
 sed -i 's/User=nobody/User=garb/g' %{buildroot}%{_unitdir}/garb.service
 
+install -m0644 -D galera.sysusers.conf %{buildroot}%{_sysusersdir}/galera.conf
+
 
 %check
 %ctest
 
 
 %pre
-/usr/sbin/useradd -M -r -d /dev/null -s /sbin/nologin -c "Galera Arbitrator Daemon" garb >/dev/null 2>&1 || :
 # Fixup after upgrading on system before systemd unit rename
 unlink /etc/systemd/system/garb.service || :
 
@@ -142,9 +145,25 @@ unlink /etc/systemd/system/garb.service || :
 %doc %{_docdir}/galera/COPYING
 %doc %{_docdir}/galera/LICENSE.asio
 %doc %{_docdir}/galera/README-MySQL
+%{_sysusersdir}/galera.conf
 
 
 %changelog
+* Sun Feb 08 2026 Michal Schorm <mschorm@redhat.com> - 26.4.25-1
+- Rebased to 26.4.25
+
+* Tue Jan 06 2026 Michal Schorm <mschorm@redhat.com> - 26.4.24-1
+- Rebase to 26.4.24
+
+* Fri Aug 08 2025 Michal Schorm <mschorm@redhat.com> - 26.4.23-1
+- Rebase to 26.4.23
+
+* Wed Jul 30 2025 Michal Schorm <mschorm@redhat.com> - 26.4.22-1
+- Rebase to 26.4.22
+
+* Tue Feb 11 2025 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 26.4.21-2
+- Add sysusers.d config file to allow rpm to create users/groups automatically
+
 * Wed Feb 05 2025 Michal Schorm <mschorm@redhat.com> - 26.4.21-1
 - Rebase to 26.4.21
 

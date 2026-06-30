@@ -2,7 +2,7 @@
 ExcludeArch: %{ix86}
 
 Name:           galera
-Version:        26.4.25
+Version:        26.4.27
 Release:        1%{?dist}
 Summary:        Synchronous multi-master wsrep provider (replication engine)
 
@@ -14,10 +14,6 @@ URL:            http://galeracluster.com/
 #   https://archive.mariadb.org/mariadb-10.4.16/galera-26.4.6/src/galera-26.4.6.tar.gz
 
 Source0:        http://releases.galeracluster.com/source/%{name}-%{version}.tar.gz
-
-Patch0:         cmake_paths.patch
-Patch1:         docs.patch
-Patch2:         network.patch
 
 BuildRequires:  boost-devel check-devel openssl-devel cmake systemd gcc-c++ asio-devel
 Requires:       nmap-ncat
@@ -35,9 +31,6 @@ description of Galera replication engine see https://www.galeracluster.com web.
 
 %prep
 %setup -q
-%patch -P0 -p1
-%patch -P1 -p1
-%patch -P2 -p1
 
 # Create a sysusers.d config file
 cat >galera.sysusers.conf <<EOF
@@ -55,9 +48,9 @@ EOF
        \
        -DINSTALL_DOCDIR="share/doc/%{name}/" \
        -DINSTALL_GARBD="sbin" \
-       -DINSTALL_GARBD-SYSTEMD="sbin" \
-       -DINSTALL_CONFIGURATION="/etc/sysconfig/" \
-       -DINSTALL_SYSTEMD_SERVICE="lib/systemd/system" \
+       -DINSTALL_GARBD_SYSTEMD="sbin" \
+       -DINSTALL_GARBD_CONFIGURATION="/etc/sysconfig/" \
+       -DINSTALL_GARBD_SERVICE="lib/systemd/system" \
        -DINSTALL_LIBDIR="%{_lib}/galera" \
        -DINSTALL_MANPAGE="share/man/man8"
 
@@ -103,6 +96,7 @@ sed -i 's/User=nobody/User=garb/g' %{buildroot}%{_unitdir}/garb.service
 
 install -m0644 -D galera.sysusers.conf %{buildroot}%{_sysusersdir}/galera.conf
 
+mv %{buildroot}%{_sysconfdir}/sysconfig/garb.cnf %{buildroot}%{_sysconfdir}/sysconfig/garb
 
 %check
 %ctest
@@ -149,6 +143,12 @@ unlink /etc/systemd/system/garb.service || :
 
 
 %changelog
+* Wed Jun 03 2026 Pavol Sloboda <psloboda@redhat.com> - 26.4.27-1
+- Rebased to 26.4.27
+
+* Mon May 25 2026 Pavol Sloboda <psloboda@redhat.com> - 26.4.26-1
+- Rebased to 26.4.26
+
 * Sun Feb 08 2026 Michal Schorm <mschorm@redhat.com> - 26.4.25-1
 - Rebased to 26.4.25
 

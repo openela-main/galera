@@ -2,7 +2,7 @@
 ExcludeArch: %{ix86}
 
 Name:           galera
-Version:        26.4.23
+Version:        26.4.27
 Release:        1%{?dist}
 Summary:        Synchronous multi-master wsrep provider (replication engine)
 
@@ -17,9 +17,6 @@ Source0:        http://releases.galeracluster.com/source/%{name}-%{version}.tar.
 
 Source1:        garbd.service
 Source2:        garbd-wrapper
-
-Patch0:         cmake_paths.patch
-Patch1:         docs.patch
 
 BuildRequires:  boost-devel check-devel openssl-devel cmake systemd gcc-c++ asio-devel
 Requires(pre):  /usr/sbin/useradd
@@ -38,8 +35,6 @@ description of Galera replication engine see https://www.galeracluster.com web.
 
 %prep
 %setup -q
-%patch -P0 -p1
-%patch -P1 -p1
 
 %build
 
@@ -52,9 +47,9 @@ description of Galera replication engine see https://www.galeracluster.com web.
        \
        -DINSTALL_DOCDIR="share/doc/%{name}/" \
        -DINSTALL_GARBD="sbin" \
-       -DINSTALL_GARBD-SYSTEMD="share/doc/galera" \
-       -DINSTALL_CONFIGURATION="/etc/sysconfig/" \
-       -DINSTALL_SYSTEMD_SERVICE="share/doc/galera" \
+       -DINSTALL_GARBD_SYSTEMD="share/doc/galera" \
+       -DINSTALL_GARBD_CONFIGURATION="/etc/sysconfig/" \
+       -DINSTALL_GARBD_SERVICE="share/doc/galera" \
        -DINSTALL_LIBDIR="%{_lib}/galera" \
        -DINSTALL_MANPAGE="share/man/man8"
 
@@ -114,6 +109,7 @@ sed -i 's/User=nobody/User=garb/g' %{buildroot}/usr/share/doc/galera/garbd.servi
 install -D -m 644 %{SOURCE1} %{buildroot}%{_unitdir}/garbd.service
 install -D -m 755 %{SOURCE2} %{buildroot}%{_sbindir}/garbd-wrapper
 
+mv %{buildroot}%{_sysconfdir}/sysconfig/garb.cnf %{buildroot}%{_sysconfdir}/sysconfig/garb
 
 %check
 %ctest
@@ -160,6 +156,18 @@ install -D -m 755 %{SOURCE2} %{buildroot}%{_sbindir}/garbd-wrapper
 
 
 %changelog
+* Wed Jun 03 2026 Pavol Sloboda <psloboda@redhat.com> - 26.4.27-1
+- Rebased to 26.4.27
+
+* Mon May 25 2026 Pavol Sloboda <psloboda@redhat.com> - 26.4.26-1
+- Rebased to 26.4.26
+
+* Sun Feb 08 2026 Michal Schorm <mschorm@redhat.com> - 26.4.25-1
+- Rebased to 26.4.25
+
+* Tue Jan 06 2026 Michal Schorm <mschorm@redhat.com> - 26.4.24-1
+- Rebase to 26.4.24
+
 * Fri Aug 08 2025 Michal Schorm <mschorm@redhat.com> - 26.4.23-1
 - Rebase to 26.4.23
 

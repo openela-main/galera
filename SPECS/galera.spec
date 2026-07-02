@@ -2,7 +2,7 @@
 ExcludeArch: %{ix86}
 
 Name:           galera
-Version:        26.4.20
+Version:        26.4.27
 Release:        1%{?dist}
 Summary:        Synchronous multi-master wsrep provider (replication engine)
 
@@ -15,11 +15,7 @@ URL:            http://galeracluster.com/
 
 Source0:        http://releases.galeracluster.com/source/%{name}-%{version}.tar.gz
 
-Patch0:         cmake_paths.patch
-Patch1:         docs.patch
-
 BuildRequires:  boost-devel check-devel openssl-devel cmake systemd gcc-c++ asio-devel
-Requires(pre):  /usr/sbin/useradd
 Requires:       nmap-ncat
 Requires:       procps-ng
 
@@ -35,12 +31,13 @@ description of Galera replication engine see https://www.galeracluster.com web.
 
 %prep
 %setup -q
-%patch -P0 -p1
-%patch -P1 -p1
+
+# Create a sysusers.d config file
+cat >galera.sysusers.conf <<EOF
+u garb - 'Galera Arbitrator Daemon' /dev/null -
+EOF
 
 %build
-%{set_build_flags}
-
 
 %cmake \
        -DCMAKE_BUILD_TYPE="%{?with_debug:Debug}%{!?with_debug:RelWithDebInfo}" \
@@ -51,13 +48,13 @@ description of Galera replication engine see https://www.galeracluster.com web.
        \
        -DINSTALL_DOCDIR="share/doc/%{name}/" \
        -DINSTALL_GARBD="sbin" \
-       -DINSTALL_GARBD-SYSTEMD="sbin" \
-       -DINSTALL_CONFIGURATION="/etc/sysconfig/" \
-       -DINSTALL_SYSTEMD_SERVICE="lib/systemd/system" \
+       -DINSTALL_GARBD_SYSTEMD="sbin" \
+       -DINSTALL_GARBD_CONFIGURATION="/etc/sysconfig/" \
+       -DINSTALL_GARBD_SERVICE="lib/systemd/system" \
        -DINSTALL_LIBDIR="%{_lib}/galera" \
        -DINSTALL_MANPAGE="share/man/man8"
 
-cmake -B %_vpath_builddir -LAH
+cmake -B %_vpath_builddir -N -LAH
 
 %cmake_build
 
@@ -109,13 +106,12 @@ sed -i 's/User=nobody/User=garb/g' %{buildroot}%{_unitdir}/garbd.service
 # Maintainers from other distributions also tries to resolve it on the upstream:
 #   https://github.com/codership/galera/pull/633
 
+install -m0644 -D galera.sysusers.conf %{buildroot}%{_sysusersdir}/galera.conf
+
+mv %{buildroot}%{_sysconfdir}/sysconfig/garb.cnf %{buildroot}%{_sysconfdir}/sysconfig/garb
 
 %check
 %ctest
-
-
-%pre
-/usr/sbin/useradd -M -r -d /dev/null -s /sbin/nologin -c "Galera Arbitrator Daemon" garb >/dev/null 2>&1 || :
 
 %post
 /sbin/ldconfig
@@ -150,9 +146,34 @@ sed -i 's/User=nobody/User=garb/g' %{buildroot}%{_unitdir}/garbd.service
 %doc %{_docdir}/galera/COPYING
 %doc %{_docdir}/galera/LICENSE.asio
 %doc %{_docdir}/galera/README-MySQL
+%{_sysusersdir}/galera.conf
 
 
 %changelog
+* Wed Jun 03 2026 Pavol Sloboda <psloboda@redhat.com> - 26.4.27-1
+- Rebased to 26.4.27
+
+* Mon May 25 2026 Pavol Sloboda <psloboda@redhat.com> - 26.4.26-1
+- Rebased to 26.4.26
+
+* Sun Feb 08 2026 Michal Schorm <mschorm@redhat.com> - 26.4.25-1
+- Rebased to 26.4.25
+
+* Tue Jan 06 2026 Michal Schorm <mschorm@redhat.com> - 26.4.24-1
+- Rebase to 26.4.24
+
+* Fri Aug 08 2025 Michal Schorm <mschorm@redhat.com> - 26.4.23-1
+- Rebase to 26.4.23
+
+* Wed Jul 30 2025 Michal Schorm <mschorm@redhat.com> - 26.4.22-1
+- Rebase to 26.4.22
+
+* Tue Feb 11 2025 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 26.4.21-2
+- Add sysusers.d config file to allow rpm to create users/groups automatically
+
+* Wed Feb 05 2025 Michal Schorm <mschorm@redhat.com> - 26.4.21-1
+- Rebase to 26.4.21
+
 * Thu Nov 14 2024 Michal Schorm <mschorm@redhat.com> - 26.4.20-1
 - Rebase to 26.4.20
 
